@@ -1,6 +1,6 @@
 # Bro's game jam 2023
 
-Game template using Phaser 3. Can be edited right in the browser:
+Can be edited right in the browser:
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/zommerfelds/bros-game-jam)
 
