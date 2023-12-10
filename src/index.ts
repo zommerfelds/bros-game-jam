@@ -7,6 +7,7 @@ class MyGame extends Phaser.Scene {
     readonly TILES_WALL_DIRT = 2;
     readonly TILES_FLOOR_SAND = 8;
     readonly TILES_FLOOR_DIRT = 9;
+    readonly TILES_PLAYER = 24;
 
     constructor() {
         super();
@@ -41,10 +42,15 @@ class MyGame extends Phaser.Scene {
             for (let x = 0; x < mapWidth; x++) {
                 const tileId = map[y][x];
                 if (tileId != -1) {
-                    this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                    const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                    tile.setDepth(y);
                 }
             }
         }
+
+        const player = this.add.image(10 + 8 + 16 * 3, 10 + 8 + 11 * 7, 'tiles', this.TILES_PLAYER);
+        player.setDepth(7);
+
     }
 }
 
