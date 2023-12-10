@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "start",
+			"label": "npm: start",
+			"problemMatcher": [],
+			"runOptions": {
+				"runOn": "folderOpen",
+				"instanceLimit": 1
+			},
+		}
+	]
+}
