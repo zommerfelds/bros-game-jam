@@ -1,12 +1,12 @@
-# Phaser game template
+# Bro's game jam 2023
 
 Game template using Phaser 3. Can be edited right in the browser:
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/zommerfelds/phaser5-game)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/zommerfelds/bros-game-jam)
 
-Originally based on https://github.com/gamecook/phaser-project-template
+Live demo: https://zommerfelds.github.io/brose-game-jam/
 
-Live demo: https://zommerfelds.github.io/phaser3-game-template/
+Game design doc: https://docs.google.com/document/d/1z-28cd89CuRySznOt9ckvRBHHFmWWcBWX7ONH93zpOk/edit
 
 ## Set up deployment to GitHub Pages
 
