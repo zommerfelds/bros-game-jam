@@ -20,7 +20,7 @@ class MyGame extends Phaser.Scene {
             targets: swordGuy,
             tweens: [
                 {
-                    x: 0,
+                    x: 40,
                     duration: 1500,
                     onComplete: () => { swordGuy.flipX = true; },
                 },
