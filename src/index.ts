@@ -9,6 +9,13 @@ class MyGame extends Phaser.Scene {
     readonly TILES_FLOOR_DIRT = 9;
     readonly TILES_PLAYER = 24;
 
+    keyUp: Phaser.Input.Keyboard.Key;
+    keyDown: Phaser.Input.Keyboard.Key;
+    keyLeft: Phaser.Input.Keyboard.Key;
+    keyRight: Phaser.Input.Keyboard.Key;
+
+    player: Phaser.GameObjects.Image;
+
     constructor() {
         super();
     }
@@ -48,9 +55,32 @@ class MyGame extends Phaser.Scene {
             }
         }
 
-        const player = this.add.image(10 + 8 + 16 * 3, 10 + 8 + 11 * 7, 'tiles', this.TILES_PLAYER);
-        player.setDepth(7);
+        this.player = this.add.image(10 + 8 + 16 * 3, 10 + 8 + 11 * 7, 'tiles', this.TILES_PLAYER);
+        this.player.setDepth(7.5);
 
+        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+
+    }
+
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.keyUp)) {
+            this.player.y -= 11;
+            this.player.setDepth(this.player.depth - 1);
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keyDown)) {
+            this.player.y += 11;
+            this.player.setDepth(this.player.depth + 1);
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keyLeft)) {
+            this.player.x -= 16;
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keyRight)) {
+            this.player.x += 16;
+        }
     }
 }
 
