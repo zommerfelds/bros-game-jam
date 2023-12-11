@@ -78,33 +78,37 @@ class MyGame extends Phaser.Scene {
         this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
 
+        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+            const diff = new Phaser.Math.Vector2(pointer.upX - pointer.downX, pointer.upY - pointer.downY);
+            if (diff.length() < 2) return;
+            const dirs = [
+                new Phaser.Math.Vector2(1, 0), new Phaser.Math.Vector2(-1, 0),
+                new Phaser.Math.Vector2(0, -1), new Phaser.Math.Vector2(0, 1)];
+            let maxDot = 0.0;
+            let maxDir = null;
+            for (let dir of dirs) {
+                const dot = diff.dot(dir);
+                if (dot > maxDot) {
+                    maxDot = dot;
+                    maxDir = dir;
+                }
+            }
+            this.move(maxDir.x, maxDir.y);
+        });
+
+        this.input.keyboard.on('keydown-UP', (event: any) => this.move(0, -1));
+        this.input.keyboard.on('keydown-DOWN', (event: any) => this.move(0, 1));
+        this.input.keyboard.on('keydown-LEFT', (event: any) => this.move(-1, 0));
+        this.input.keyboard.on('keydown-RIGHT', (event: any) => this.move(1, 0));
     }
 
+    move(diffX: number, diffY: number) {
+        let targetX = this.playerX + diffX;
+        let targetY = this.playerY + diffY;
 
-    update() {
-        let triedToMove = false;
-        let targetX = this.playerX;
-        let targetY = this.playerY;
-        if (Phaser.Input.Keyboard.JustDown(this.keyUp)) {
-            triedToMove = true;
-            targetY--;
-        }
-        if (Phaser.Input.Keyboard.JustDown(this.keyDown)) {
-            triedToMove = true;
-            targetY++;
-        }
-        if (Phaser.Input.Keyboard.JustDown(this.keyLeft)) {
-            triedToMove = true;
-            targetX--;
-            this.player.flipX = false;
-        }
-        if (Phaser.Input.Keyboard.JustDown(this.keyRight)) {
-            triedToMove = true;
-            targetX++;
-            this.player.flipX = true;
-        }
+        this.player.flipX = (diffX == 1);
 
-        if (triedToMove && this.canMove(targetX, targetY)) {
+        if (this.canMove(targetX, targetY)) {
             this.player.play('walk');
             this.playerX = targetX;
             this.playerY = targetY;
@@ -114,11 +118,14 @@ class MyGame extends Phaser.Scene {
                 x: 10 + 8 + 16 * targetX,
                 y: 10 + 8 + 11 * targetY,
                 duration: 200,
-                onComplete: () => { this.player.play('idle'); },
+                onComplete: () => this.player.play('idle'),
             });
         }
 
         this.player.depth = this.player.y;
+    }
+
+    update() {
     }
 
     canMove(x: number, y: number) {
