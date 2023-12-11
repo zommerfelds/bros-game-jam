@@ -7,14 +7,15 @@ class MyGame extends Phaser.Scene {
     readonly TILES_WALL_DIRT = 2;
     readonly TILES_FLOOR_SAND = 8;
     readonly TILES_FLOOR_DIRT = 9;
-    readonly TILES_PLAYER = 24;
+    readonly TILES_PLAYER_0 = 24;
+    readonly TILES_PLAYER_1 = 25;
 
     keyUp: Phaser.Input.Keyboard.Key;
     keyDown: Phaser.Input.Keyboard.Key;
     keyLeft: Phaser.Input.Keyboard.Key;
     keyRight: Phaser.Input.Keyboard.Key;
 
-    player: Phaser.GameObjects.Image;
+    player: Phaser.GameObjects.Sprite;
 
     constructor() {
         super();
@@ -50,13 +51,20 @@ class MyGame extends Phaser.Scene {
                 const tileId = map[y][x];
                 if (tileId != -1) {
                     const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                    tile.setDepth(y);
+                    tile.depth = y;
                 }
             }
         }
 
-        this.player = this.add.image(10 + 8 + 16 * 3, 10 + 8 + 11 * 7, 'tiles', this.TILES_PLAYER);
-        this.player.setDepth(7.5);
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('tiles', { frames: [this.TILES_PLAYER_0, this.TILES_PLAYER_1] }),
+            frameRate: 8,
+            repeat: -1,
+        });
+        this.player = this.add.sprite(10 + 8 + 16 * 3, 10 + 8 + 11 * 7, undefined);
+        this.player.play('walk');
+        this.player.depth = 7.5;
 
         this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
         this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
