@@ -2,6 +2,10 @@ import 'phaser';
 
 // @ts-ignore
 import tileset from '../public/assets/tileset.png';
+// @ts-ignore
+import fontPng from '../public/assets/arcade.png';
+// @ts-ignore
+import fontXml from '../public/assets/arcade.xml';
 
 class MyGame extends Phaser.Scene {
 
@@ -59,6 +63,7 @@ class MyGame extends Phaser.Scene {
     preload() {
         this.load.path = 'assets/';
         this.load.spritesheet('tiles', tileset, { frameWidth: 16, frameHeight: 16 });
+        this.load.bitmapFont('arcade', fontPng, fontXml);
     }
 
     create() {
@@ -101,6 +106,18 @@ class MyGame extends Phaser.Scene {
         this.keyDown = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
         this.keyLeft = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         this.keyRight = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+
+        const text = this.add.bitmapText(20, 200, "arcade", "fullscreen", 8);
+        text.setInteractive();
+        text.on('pointerdown', () => {
+            if (this.scale.isFullscreen) {
+                console.warn('stop full');
+                this.scale.stopFullscreen();
+            } else {
+                console.warn('start full');
+                this.scale.startFullscreen();
+            }
+        });
     }
 
     move(diffX: number, diffY: number) {
