@@ -19,25 +19,25 @@ class MyGame extends Phaser.Scene {
     keyRight: Phaser.Input.Keyboard.Key;
 
     player: Phaser.GameObjects.Sprite;
-    playerX: number = 3;
+    playerX: number = 5;
     playerY: number = 7;
     playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
 
     staticMap = [
-        [2, 2, 2, 2, 2, 2, 2, 2],
-        [2, 8, 8, 8, 8, 8, 8, 2],
-        [2, 2, 8, 8, 8, 8, 8, 2],
-        [-1, 2, 2, 2, 2, 8, 2, 2],
-        [-1, -1, -1, -1, 2, 8, 2, -1],
-        [-1, 2, 2, 2, 2, 8, 2, -1],
-        [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 2, 2, 2, 2, 2, -1],
+        [2, 2, 2, 2, 2, 2, 2],
+        [2, 8, 8, 8, 8, 8, 2],
+        [2, 2, 8, 8, 8, 8, 2],
+        [-1, 2, 2, 2, 2, 8, 2],
+        [-1, -1, -1, -1, 2, 8, 2],
+        [-1, 2, 2, 2, 2, 8, 2,],
+        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 2, 2, 2, 2, 2,],
     ];
     entities = [
         { type: "box1", x: 3, y: 8 },
@@ -150,7 +150,11 @@ class MyGame extends Phaser.Scene {
     }
 
     readInput() {
-        // Don't read input while moving.
+        if (!this.input.pointer1.isDown) {
+            this.playerInputMoveDir = undefined;
+        }
+
+        // Don't allow further moves if there is already one in progress.
         if (this.playerMoveTween?.isActive()) return;
 
         // Keyboard
@@ -160,9 +164,8 @@ class MyGame extends Phaser.Scene {
         if (this.keyDown.isDown) this.move(0, 1);
 
         // Touch
-        const pointer = this.input.pointer1;
-        if (pointer.isDown) {
-            const diff = new Phaser.Math.Vector2(pointer.x - pointer.downX, pointer.y - pointer.downY);
+        if (this.input.pointer1.isDown) {
+            const diff = new Phaser.Math.Vector2(this.input.pointer1.x - this.input.pointer1.downX, this.input.pointer1.y - this.input.pointer1.downY);
             if (diff.length() < 15) return;
             if (this.playerInputMoveDir) {
                 // Keep going in the same direction until the player releases.
@@ -180,11 +183,8 @@ class MyGame extends Phaser.Scene {
                         maxDir = dir;
                     }
                 }
-                this.move(maxDir.x, maxDir.y);
                 this.playerInputMoveDir = maxDir;
             }
-        } else {
-            this.playerInputMoveDir = undefined;
         }
     }
 
@@ -220,8 +220,8 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
-    width: 148,
-    height: 220,
+    width: 132,
+    height: 236,
     zoom: 5,
     pixelArt: true,
     antialias: false,
