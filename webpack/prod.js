@@ -10,7 +10,7 @@ module.exports = {
   entry: path.resolve(__dirname, "../src/index.ts"),
   output: {
     path: path.resolve(process.cwd(), 'dist'),
-    filename: "bundle.min.js"
+    filename: "bundle[contenthash].min.js",
   },
   devtool: false,
   performance: {
@@ -30,7 +30,12 @@ module.exports = {
       },
       {
         test: /\.(gif|png|jpe?g|svg|xml|glsl)$/i,
-        use: "file-loader"
+        use: [{
+          loader: "file-loader",
+          options: {
+            name: '[path][contenthash]-[name].[ext]',
+          },
+        }],
       }
     ]
   },

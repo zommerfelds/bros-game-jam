@@ -1,9 +1,12 @@
 {
-    "compilerOptions": {
-      "outDir": "./dist/",
-      "noImplicitAny": true,
-      "module": "es6",
-      "target": "es5",
-      "moduleResolution": "node"
-    }
-  }
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "moduleResolution": "node"
+  },
+  "include": [
+    "asset-module.d.ts",
+  ],
+}

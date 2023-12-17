@@ -1,5 +1,8 @@
 import 'phaser';
 
+// @ts-ignore
+import tileset from '../public/assets/tileset.png';
+
 class MyGame extends Phaser.Scene {
 
     readonly TILES_BOX1 = 0;
@@ -19,7 +22,7 @@ class MyGame extends Phaser.Scene {
     playerX: number = 3;
     playerY: number = 7;
     playerMoveTween: Phaser.Tweens.Tween;
-    playerMoveDir?: Phaser.Math.Vector2 = null;
+    playerMoveDir?: Phaser.Math.Vector2 = undefined;
 
     map = [
         [2, 2, 2, 2, 2, 2, 2, 2],
@@ -45,7 +48,7 @@ class MyGame extends Phaser.Scene {
 
     preload() {
         this.load.path = 'assets/';
-        this.load.spritesheet('tiles', 'tileset.png', { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('tiles', tileset, { frameWidth: 16, frameHeight: 16 });
     }
 
     create() {
@@ -71,25 +74,27 @@ class MyGame extends Phaser.Scene {
             key: 'idle',
             frames: this.anims.generateFrameNumbers('tiles', { frames: [this.TILES_PLAYER_0] }),
         });
-        this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, undefined);
+        this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
         this.player.play('idle');
 
-        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
-        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
-        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+        this.keyUp = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        this.keyDown = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+        this.keyLeft = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+        this.keyRight = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
 
-        this.input.keyboard.on('keydown-UP', (event: any) => this.move(0, -1));
-        this.input.keyboard.on('keydown-DOWN', (event: any) => this.move(0, 1));
-        this.input.keyboard.on('keydown-LEFT', (event: any) => this.move(-1, 0));
-        this.input.keyboard.on('keydown-RIGHT', (event: any) => this.move(1, 0));
+        this.input.keyboard!.on('keydown-UP', (event: any) => this.move(0, -1));
+        this.input.keyboard!.on('keydown-DOWN', (event: any) => this.move(0, 1));
+        this.input.keyboard!.on('keydown-LEFT', (event: any) => this.move(-1, 0));
+        this.input.keyboard!.on('keydown-RIGHT', (event: any) => this.move(1, 0));
     }
 
     move(diffX: number, diffY: number) {
         let targetX = this.playerX + diffX;
         let targetY = this.playerY + diffY;
 
-        this.player.flipX = (diffX == 1);
+        if (diffX != 0.0) {
+            this.player.flipX = (diffX == 1);
+        }
 
         if (this.canMove(targetX, targetY)) {
             this.player.play('walk');
@@ -114,7 +119,7 @@ class MyGame extends Phaser.Scene {
             if (this.playerMoveTween?.isActive()) return;
             const diff = new Phaser.Math.Vector2(pointer.x - pointer.downX, pointer.y - pointer.downY);
             if (diff.length() < 10) return;
-            if (this.playerMoveDir != null) {
+            if (this.playerMoveDir) {
                 // Keep going in the same direction until the player releases.
                 this.move(this.playerMoveDir.x, this.playerMoveDir.y);
             } else {
@@ -122,7 +127,7 @@ class MyGame extends Phaser.Scene {
                     new Phaser.Math.Vector2(1, 0), new Phaser.Math.Vector2(-1, 0),
                     new Phaser.Math.Vector2(0, -1), new Phaser.Math.Vector2(0, 1)];
                 let maxDot = 0.0;
-                let maxDir = null;
+                let maxDir = new Phaser.Math.Vector2(0, 0);
                 for (let dir of dirs) {
                     const dot = diff.dot(dir);
                     if (dot > maxDot) {
@@ -134,7 +139,7 @@ class MyGame extends Phaser.Scene {
                 this.playerMoveDir = maxDir;
             }
         } else {
-            this.playerMoveDir = null;
+            this.playerMoveDir = undefined;
         }
     }
 
