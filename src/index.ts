@@ -22,7 +22,7 @@ class MyGame extends Phaser.Scene {
     playerX: number = 3;
     playerY: number = 7;
     playerMoveTween: Phaser.Tweens.Tween;
-    playerMoveDir?: Phaser.Math.Vector2 = undefined;
+    playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
 
     staticMap = [
         [2, 2, 2, 2, 2, 2, 2, 2],
@@ -102,10 +102,10 @@ class MyGame extends Phaser.Scene {
         this.keyLeft = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         this.keyRight = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
 
-        this.input.keyboard!.on('keydown-UP', (event: any) => this.move(0, -1));
+        /*this.input.keyboard!.on('keydown-UP', (event: any) => this.move(0, -1));
         this.input.keyboard!.on('keydown-DOWN', (event: any) => this.move(0, 1));
         this.input.keyboard!.on('keydown-LEFT', (event: any) => this.move(-1, 0));
-        this.input.keyboard!.on('keydown-RIGHT', (event: any) => this.move(1, 0));
+        this.input.keyboard!.on('keydown-RIGHT', (event: any) => this.move(1, 0));*/
     }
 
     move(diffX: number, diffY: number) {
@@ -145,14 +145,30 @@ class MyGame extends Phaser.Scene {
     }
 
     update() {
+        this.readInput();
+        for (let obj of this.allMovableObjects) {
+            obj.depth = obj.y;
+        }
+    }
+
+    readInput() {
+        // Don't read input while moving.
+        if (this.playerMoveTween?.isActive()) return;
+
+        // Keyboard
+        if (this.keyLeft.isDown) this.move(-1, 0);
+        if (this.keyRight.isDown) this.move(1, 0);
+        if (this.keyUp.isDown) this.move(0, -1);
+        if (this.keyDown.isDown) this.move(0, 1);
+
+        // Touch
         const pointer = this.input.pointer1;
         if (pointer.isDown) {
-            if (this.playerMoveTween?.isActive()) return;
             const diff = new Phaser.Math.Vector2(pointer.x - pointer.downX, pointer.y - pointer.downY);
             if (diff.length() < 10) return;
-            if (this.playerMoveDir) {
+            if (this.playerInputMoveDir) {
                 // Keep going in the same direction until the player releases.
-                this.move(this.playerMoveDir.x, this.playerMoveDir.y);
+                this.move(this.playerInputMoveDir.x, this.playerInputMoveDir.y);
             } else {
                 const dirs = [
                     new Phaser.Math.Vector2(1, 0), new Phaser.Math.Vector2(-1, 0),
@@ -167,13 +183,10 @@ class MyGame extends Phaser.Scene {
                     }
                 }
                 this.move(maxDir.x, maxDir.y);
-                this.playerMoveDir = maxDir;
+                this.playerInputMoveDir = maxDir;
             }
         } else {
-            this.playerMoveDir = undefined;
-        }
-        for (let obj of this.allMovableObjects) {
-            obj.depth = obj.y;
+            this.playerInputMoveDir = undefined;
         }
     }
 
