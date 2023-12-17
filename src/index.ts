@@ -24,26 +24,36 @@ class MyGame extends Phaser.Scene {
     playerMoveTween: Phaser.Tweens.Tween;
     playerMoveDir?: Phaser.Math.Vector2 = undefined;
 
-    map = [
+    staticMap = [
         [2, 2, 2, 2, 2, 2, 2, 2],
-        [2, 8, 8, 8, 0, 8, 8, 2],
+        [2, 8, 8, 8, 8, 8, 8, 2],
         [2, 2, 8, 8, 8, 8, 8, 2],
         [-1, 2, 2, 2, 2, 8, 2, 2],
         [-1, -1, -1, -1, 2, 8, 2, -1],
         [-1, 2, 2, 2, 2, 8, 2, -1],
         [-1, 2, 9, 9, 9, 9, 2, -1],
         [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 0, 9, 9, 2, -1],
         [-1, 2, 9, 9, 9, 9, 2, -1],
-        [-1, 2, 9, 9, 1, 9, 2, -1],
+        [-1, 2, 9, 9, 9, 9, 2, -1],
+        [-1, 2, 9, 9, 9, 9, 2, -1],
         [-1, 2, 9, 9, 9, 9, 2, -1],
         [-1, 2, 2, 2, 2, 2, 2, -1],
     ];
-    mapWidth = this.map[0].length;
-    mapHeight = this.map.length;
+    entities = [
+        { type: "box1", x: 3, y: 8 },
+        { type: "box2", x: 4, y: 10 },
+    ];
+    mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
+    mapWidth = this.staticMap[0].length;
+    mapHeight = this.staticMap.length;
+    allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
 
     constructor() {
         super();
+        this.mapBoxes = [];
+        for (let y = 0; y < this.mapHeight; y++) {
+            this.mapBoxes[y] = [];
+        }
     }
 
     preload() {
@@ -52,16 +62,25 @@ class MyGame extends Phaser.Scene {
     }
 
     create() {
-
-
         for (let y = 0; y < this.mapHeight; y++) {
             for (let x = 0; x < this.mapWidth; x++) {
-                const tileId = this.map[y][x];
+                const tileId = this.staticMap[y][x];
                 if (tileId != -1) {
                     const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                     tile.depth = tile.y + (this.isGroundTile(tileId) ? -1000 : 0);
                 }
             }
+        }
+        let tileId = -1;
+        for (let entity of this.entities) {
+            switch (entity.type) {
+                case "box1": tileId = this.TILES_BOX1; break;
+                case "box2": tileId = this.TILES_BOX2; break;
+                default: throw `invalid type ${entity['type']}`;
+            }
+            const tile = this.add.image(10 + 8 + 16 * entity.x, 10 + 8 + 11 * entity.y, 'tiles', tileId);
+            this.mapBoxes[entity.y][entity.x] = { obj: tile };
+            this.allMovableObjects.push(tile);
         }
 
         this.anims.create({
@@ -76,6 +95,7 @@ class MyGame extends Phaser.Scene {
         });
         this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
         this.player.play('idle');
+        this.allMovableObjects.push(this.player);
 
         this.keyUp = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
         this.keyDown = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
@@ -96,7 +116,19 @@ class MyGame extends Phaser.Scene {
             this.player.flipX = (diffX == 1);
         }
 
-        if (this.canMove(targetX, targetY)) {
+        if (this.canMove(diffX, diffY)) {
+            const box = this.mapBoxes[targetY][targetX];
+            if (box) {
+                this.tweens.add({
+                    targets: box.obj,
+                    x: 10 + 8 + 16 * (targetX + diffX),
+                    y: 10 + 8 + 11 * (targetY + diffY),
+                    duration: 200
+                });
+                this.mapBoxes[targetY][targetX] = undefined;
+                this.mapBoxes[targetY + diffY][targetX + diffX] = box;
+            }
+
             this.player.play('walk');
             this.playerX = targetX;
             this.playerY = targetY;
@@ -110,7 +142,6 @@ class MyGame extends Phaser.Scene {
             });
         }
 
-        this.player.depth = this.player.y;
     }
 
     update() {
@@ -141,16 +172,34 @@ class MyGame extends Phaser.Scene {
         } else {
             this.playerMoveDir = undefined;
         }
+        for (let obj of this.allMovableObjects) {
+            obj.depth = obj.y;
+        }
     }
 
-    canMove(x: number, y: number) {
-        if (x < 0 || x >= this.mapWidth || y < 0 || y > this.mapHeight)
+    canMove(diffX: number, diffY: number) {
+        let targetX = this.playerX + diffX;
+        let targetY = this.playerY + diffY;
+        if (targetX < 0 || targetX >= this.mapWidth || targetY < 0 || targetY > this.mapHeight)
             return false;
-        return this.isGroundTile(this.map[y][x]);
+        // TODO: refactor this once there are more object types
+        const box = this.mapBoxes[targetY][targetX];
+        if (box) {
+            let boxTargetX = targetX + diffX;
+            let boxTargetY = targetY + diffY;
+            if (boxTargetX < 0 || boxTargetX >= this.mapWidth || boxTargetY < 0 || boxTargetY > this.mapHeight)
+                return false;
+            return this.mapBoxes[boxTargetY][boxTargetX] == undefined && this.isGroundTile(this.staticMap[boxTargetY][boxTargetX]);
+        } else
+            return this.isGroundTile(this.staticMap[targetY][targetX]);
     }
 
     isGroundTile(tileId: number) {
         return tileId == this.TILES_FLOOR_SAND || tileId == this.TILES_FLOOR_DIRT;
+    }
+
+    isBoxTile(tileId: number) {
+        return tileId == this.TILES_BOX1 || tileId == this.TILES_BOX2;
     }
 }
 
