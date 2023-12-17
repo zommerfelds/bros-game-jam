@@ -21,7 +21,7 @@ class MyGame extends Phaser.Scene {
     player: Phaser.GameObjects.Sprite;
     playerX: number = 3;
     playerY: number = 7;
-    playerMoveTween: Phaser.Tweens.Tween;
+    playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
 
     staticMap = [
@@ -118,7 +118,9 @@ class MyGame extends Phaser.Scene {
                     targets: box.obj,
                     x: 10 + 8 + 16 * (targetX + diffX),
                     y: 10 + 8 + 11 * (targetY + diffY),
-                    duration: 200
+                    duration: 250,
+                    ease: Phaser.Math.Easing.Quadratic.InOut,
+                    delay: 30,
                 });
                 this.mapBoxes[targetY][targetX] = undefined;
                 this.mapBoxes[targetY + diffY][targetX + diffX] = box;
@@ -132,7 +134,8 @@ class MyGame extends Phaser.Scene {
                 targets: this.player,
                 x: 10 + 8 + 16 * targetX,
                 y: 10 + 8 + 11 * targetY,
-                duration: 200,
+                duration: 250,
+                ease: Phaser.Math.Easing.Quadratic.InOut,
                 onComplete: () => this.player.play('idle'),
             });
         }
@@ -160,7 +163,7 @@ class MyGame extends Phaser.Scene {
         const pointer = this.input.pointer1;
         if (pointer.isDown) {
             const diff = new Phaser.Math.Vector2(pointer.x - pointer.downX, pointer.y - pointer.downY);
-            if (diff.length() < 10) return;
+            if (diff.length() < 15) return;
             if (this.playerInputMoveDir) {
                 // Keep going in the same direction until the player releases.
                 this.move(this.playerInputMoveDir.x, this.playerInputMoveDir.y);
