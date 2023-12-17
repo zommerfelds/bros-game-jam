@@ -101,11 +101,6 @@ class MyGame extends Phaser.Scene {
         this.keyDown = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
         this.keyLeft = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         this.keyRight = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-
-        /*this.input.keyboard!.on('keydown-UP', (event: any) => this.move(0, -1));
-        this.input.keyboard!.on('keydown-DOWN', (event: any) => this.move(0, 1));
-        this.input.keyboard!.on('keydown-LEFT', (event: any) => this.move(-1, 0));
-        this.input.keyboard!.on('keydown-RIGHT', (event: any) => this.move(1, 0));*/
     }
 
     move(diffX: number, diffY: number) {
