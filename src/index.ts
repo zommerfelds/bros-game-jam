@@ -23,7 +23,7 @@ class MyGame extends Phaser.Scene {
     keyRight: Phaser.Input.Keyboard.Key;
 
     player: Phaser.GameObjects.Sprite;
-    playerX: number = 5;
+    playerX: number = 4;
     playerY: number = 7;
     playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
