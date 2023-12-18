@@ -12,7 +12,12 @@
 			"windows": {
 				"command": "echo 'Skipping pkill (windows)'"
 			},
-			"command": "pkill webpack || true"
+			"command": "pkill webpack || true",
+			"presentation": {
+				"reveal": "silent",
+				"revealProblems": "onProblem",
+				"close": true
+			}
 		},
 		{
 			"label": "run dev server",
