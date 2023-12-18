@@ -16,6 +16,7 @@ class MyGame extends Phaser.Scene {
     readonly TILES_FLOOR_DIRT = 9;
     readonly TILES_PLAYER_0 = 24;
     readonly TILES_PLAYER_1 = 25;
+    readonly TILES_EXIT = 32;
 
     keyUp: Phaser.Input.Keyboard.Key;
     keyDown: Phaser.Input.Keyboard.Key;
@@ -40,7 +41,7 @@ class MyGame extends Phaser.Scene {
         [-1, 2, 9, 9, 9, 9, 2,],
         [-1, 2, 9, 9, 9, 9, 2,],
         [-1, 2, 9, 9, 9, 9, 2,],
-        [-1, 2, 9, 9, 9, 9, 2,],
+        [-1, 2, 32, 9, 9, 9, 2,],
         [-1, 2, 2, 2, 2, 2, 2,],
     ];
     entities = [
@@ -153,7 +154,12 @@ class MyGame extends Phaser.Scene {
                 y: 10 + 8 + 11 * targetY,
                 duration: 250,
                 ease: Phaser.Math.Easing.Quadratic.InOut,
-                onComplete: () => this.player.play('idle'),
+                onComplete: () => {
+                    this.player.play('idle');
+                    if (this.staticMap[targetY][targetX] == this.TILES_EXIT) {
+                        console.warn('exit!');
+                    }
+                },
             });
         }
 
@@ -219,7 +225,7 @@ class MyGame extends Phaser.Scene {
                 return false;
             return this.mapBoxes[boxTargetY][boxTargetX] == undefined && this.isGroundTile(this.staticMap[boxTargetY][boxTargetX]);
         } else
-            return this.isGroundTile(this.staticMap[targetY][targetX]);
+            return this.isGroundTile(this.staticMap[targetY][targetX]) || this.staticMap[targetY][targetX] == this.TILES_EXIT;
     }
 
     isGroundTile(tileId: number) {
