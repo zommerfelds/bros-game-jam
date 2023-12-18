@@ -176,12 +176,12 @@ class MyGame extends Phaser.Scene {
 
         // Keyboard
         if (this.keyLeft.isDown) this.move(-1, 0);
-        if (this.keyRight.isDown) this.move(1, 0);
-        if (this.keyUp.isDown) this.move(0, -1);
-        if (this.keyDown.isDown) this.move(0, 1);
+        else if (this.keyRight.isDown) this.move(1, 0);
+        else if (this.keyUp.isDown) this.move(0, -1);
+        else if (this.keyDown.isDown) this.move(0, 1);
 
         // Touch
-        if (this.input.pointer1.isDown) {
+        else if (this.input.pointer1.isDown) {
             const diff = new Phaser.Math.Vector2(this.input.pointer1.x - this.input.pointer1.downX, this.input.pointer1.y - this.input.pointer1.downY);
             if (diff.length() < 15) return;
             if (this.playerInputMoveDir) {
