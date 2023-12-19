@@ -1,5 +1,8 @@
 import 'phaser';
 
+import { MenuScene } from './MenuScene';
+import { PlayScene } from './PlayScene';
+
 const config = {
     type: Phaser.AUTO,
     scale: {
