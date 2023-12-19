@@ -8,5 +8,6 @@
   },
   "include": [
     "asset-module.d.ts",
+    "src/**/*"
   ],
 }

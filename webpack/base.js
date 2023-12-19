@@ -7,6 +7,9 @@ module.exports = {
   entry: path.resolve(__dirname, "../src/index.ts"),
   mode: "development",
   devtool: "eval-source-map",
+  resolve: {
+    extensions: ['.ts', '.js', '.json'],
+  },
   module: {
     rules: [
       {

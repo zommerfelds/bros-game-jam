@@ -17,6 +17,9 @@ module.exports = {
     maxEntrypointSize: 2500000,
     maxAssetSize: 1200000
   },
+  resolve: {
+    extensions: ['.ts', '.js', '.json'],
+  },
   module: {
     rules: [
       {
