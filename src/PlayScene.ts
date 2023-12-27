@@ -53,7 +53,7 @@ export class PlayScene extends Phaser.Scene {
     allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
 
     constructor() {
-        super();
+        super({ key: "PlayScene" });
         this.mapBoxes = [];
         for (let y = 0; y < this.mapHeight; y++) {
             this.mapBoxes[y] = [];

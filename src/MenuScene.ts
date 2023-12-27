@@ -6,7 +6,7 @@ import fontXml from '../public/assets/arcade.xml';
 export class MenuScene extends Phaser.Scene {
 
     constructor() {
-        super();
+        super({ key: "MenuScene" });
     }
 
     preload() {
