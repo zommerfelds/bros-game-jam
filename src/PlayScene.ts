@@ -1,13 +1,12 @@
-
-// @ts-ignore
 import tileset from '../public/assets/tileset.png';
-// @ts-ignore
 import fontPng from '../public/assets/arcade.png';
-// @ts-ignore
 import fontXml from '../public/assets/arcade.xml';
+import level1Json from '../public/assets/tiled/level1.json';
 
 export class PlayScene extends Phaser.Scene {
 
+    // TODO: remove this and make it based on tiled properties
+    // TODO: try out Tiled automapping
     readonly TILES_BOX1 = 0;
     readonly TILES_BOX2 = 1;
     readonly TILES_WALL_DIRT = 2;
@@ -28,35 +27,22 @@ export class PlayScene extends Phaser.Scene {
     playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
 
-    staticMap = [
-        [2, 2, 2, 2, 2, 2, 2],
-        [2, 8, 8, 8, 8, 8, 2],
-        [2, 2, 8, 8, 8, 8, 2],
-        [-1, 2, 2, 2, 2, 8, 2],
-        [-1, -1, -1, -1, 2, 8, 2],
-        [-1, 2, 2, 2, 2, 8, 2,],
-        [-1, 2, 9, 9, 9, 9, 2,],
-        [-1, 2, 9, 9, 9, 9, 2,],
-        [-1, 2, 9, 9, 9, 9, 2,],
-        [-1, 2, 9, 9, 9, 9, 2,],
-        [-1, 2, 9, 9, 9, 9, 2,],
-        [-1, 2, 32, 9, 9, 9, 2,],
-        [-1, 2, 2, 2, 2, 2, 2,],
-    ];
-    entities = [
-        { type: "box1", x: 3, y: 8 },
-        { type: "box2", x: 4, y: 10 },
-    ];
+    staticMap: Array<Array<number>>;
     mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
-    mapWidth = this.staticMap[0].length;
-    mapHeight = this.staticMap.length;
+    mapExits: Array<Array<any>>;
+    mapWidth = 7; // TODO: make dynamic?
+    mapHeight = 13;
     allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
 
     constructor() {
         super({ key: "PlayScene" });
         this.mapBoxes = [];
+        this.mapExits = [];
+        this.staticMap = [];
         for (let y = 0; y < this.mapHeight; y++) {
             this.mapBoxes[y] = [];
+            this.mapExits[y] = [];
+            this.staticMap[y] = [];
         }
     }
 
@@ -67,8 +53,14 @@ export class PlayScene extends Phaser.Scene {
     }
 
     create() {
+        console.warn(level1Json);
+        const staticLayer = level1Json['layers'][0];
+        const w = staticLayer['width'];
+        const data = staticLayer['data'];
+
         for (let y = 0; y < this.mapHeight; y++) {
             for (let x = 0; x < this.mapWidth; x++) {
+                this.staticMap[y][x] = data[y * w + x] - 1;
                 const tileId = this.staticMap[y][x];
                 if (tileId != -1) {
                     const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
@@ -76,16 +68,35 @@ export class PlayScene extends Phaser.Scene {
                 }
             }
         }
-        let tileId = -1;
-        for (let entity of this.entities) {
-            switch (entity.type) {
-                case "box1": tileId = this.TILES_BOX1; break;
-                case "box2": tileId = this.TILES_BOX2; break;
-                default: throw `invalid type ${entity['type']}`;
+
+        const objectsLayer = level1Json['layers'][1];
+        const data2 = objectsLayer['data'];
+        for (let y = 0; y < this.mapHeight; y++) {
+            for (let x = 0; x < this.mapWidth; x++) {
+                const tileId = data2[y * w + x] - 1;
+                switch (tileId) {
+                    case this.TILES_BOX1:
+                    case this.TILES_BOX2:
+                        const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                        this.mapBoxes[y][x] = { obj: tile };
+                        this.allMovableObjects.push(tile);
+                        break;
+                    case this.TILES_PLAYER_0:
+                        this.playerX = x;
+                        this.playerY = y;
+                        break;
+                    case this.TILES_EXIT:
+                        {
+                            const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                            this.mapExits[y][x] = true;
+                        }
+                        break;
+                    case -1: break;
+                    default:
+                        console.error(`invalid tile ID ${tileId} in objects layer`);
+
+                }
             }
-            const tile = this.add.image(10 + 8 + 16 * entity.x, 10 + 8 + 11 * entity.y, 'tiles', tileId);
-            this.mapBoxes[entity.y][entity.x] = { obj: tile };
-            this.allMovableObjects.push(tile);
         }
 
         this.anims.create({
@@ -155,7 +166,7 @@ export class PlayScene extends Phaser.Scene {
                 ease: Phaser.Math.Easing.Quadratic.InOut,
                 onComplete: () => {
                     this.player.play('idle');
-                    if (this.staticMap[targetY][targetX] == this.TILES_EXIT) {
+                    if (this.mapExits[targetY][targetX] != undefined) {
                         console.warn('exit!');
                     }
                 },
