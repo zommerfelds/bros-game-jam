@@ -2,19 +2,9 @@ import tileset from '../public/assets/tileset.png';
 import fontPng from '../public/assets/arcade.png';
 import fontXml from '../public/assets/arcade.xml';
 import level1Json from '../public/assets/tiled/level1.json';
+import tileData from '../public/assets/tiled/tileset.json';
 
 export class PlayScene extends Phaser.Scene {
-
-    // TODO: remove this and make it based on tiled properties
-    // TODO: try out Tiled automapping
-    readonly TILES_BOX1 = 0;
-    readonly TILES_BOX2 = 1;
-    readonly TILES_WALL_DIRT = 2;
-    readonly TILES_FLOOR_SAND = 8;
-    readonly TILES_FLOOR_DIRT = 9;
-    readonly TILES_PLAYER_0 = 24;
-    readonly TILES_PLAYER_1 = 25;
-    readonly TILES_EXIT = 32;
 
     keyUp: Phaser.Input.Keyboard.Key;
     keyDown: Phaser.Input.Keyboard.Key;
@@ -27,7 +17,7 @@ export class PlayScene extends Phaser.Scene {
     playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
 
-    staticMap: Array<Array<number>>;
+    walls: Array<Array<boolean>>;
     mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
     mapExits: Array<Array<any>>;
     mapWidth = 7; // TODO: make dynamic?
@@ -38,11 +28,11 @@ export class PlayScene extends Phaser.Scene {
         super({ key: "PlayScene" });
         this.mapBoxes = [];
         this.mapExits = [];
-        this.staticMap = [];
+        this.walls = [];
         for (let y = 0; y < this.mapHeight; y++) {
             this.mapBoxes[y] = [];
             this.mapExits[y] = [];
-            this.staticMap[y] = [];
+            this.walls[y] = [];
         }
     }
 
@@ -53,61 +43,70 @@ export class PlayScene extends Phaser.Scene {
     }
 
     create() {
-        console.warn(level1Json);
-        const staticLayer = level1Json['layers'][0];
-        const w = staticLayer['width'];
-        const data = staticLayer['data'];
+        const layer0 = level1Json['layers'][0];
+        const layer1 = level1Json['layers'][1];
+        const w = layer0['width'];
 
-        for (let y = 0; y < this.mapHeight; y++) {
-            for (let x = 0; x < this.mapWidth; x++) {
-                this.staticMap[y][x] = data[y * w + x] - 1;
-                const tileId = this.staticMap[y][x];
-                if (tileId != -1) {
-                    const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                    tile.depth = tile.y + (this.isGroundTile(tileId) ? -1000 : 0);
-                }
+        const tileDataById: Map<number, { type: string }> = new Map();
+        const playerFrames = [];
+        for (let t of tileData['tiles']) {
+            tileDataById.set(
+                t['id'],
+                { type: t['type'] }
+            );
+            if (t['type'] == 'player') {
+                playerFrames.push(t['id']);
             }
         }
 
-        const objectsLayer = level1Json['layers'][1];
-        const data2 = objectsLayer['data'];
         for (let y = 0; y < this.mapHeight; y++) {
             for (let x = 0; x < this.mapWidth; x++) {
-                const tileId = data2[y * w + x] - 1;
-                switch (tileId) {
-                    case this.TILES_BOX1:
-                    case this.TILES_BOX2:
-                        const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                        this.mapBoxes[y][x] = { obj: tile };
-                        this.allMovableObjects.push(tile);
-                        break;
-                    case this.TILES_PLAYER_0:
-                        this.playerX = x;
-                        this.playerY = y;
-                        break;
-                    case this.TILES_EXIT:
-                        {
+                let tileId = layer0['data'][y * w + x] - 1;
+                if (tileId != -1) {
+                    const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                    tile.depth = tile.y - 1000;
+                }
+                tileId = layer1['data'][y * w + x] - 1;
+                if (tileId != -1) {
+                    switch (tileDataById.get(tileId)?.type) {
+                        case undefined: {
+                            this.walls[y][x] = true;
+                            const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                            tile.depth = tile.y;
+                            break;
+                        }
+                        case 'box': {
+                            const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                            this.mapBoxes[y][x] = { obj: tile };
+                            this.allMovableObjects.push(tile);
+                            break;
+                        }
+                        case 'player': {
+                            this.playerX = x;
+                            this.playerY = y;
+                            break;
+                        }
+                        case 'flag': {
                             const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                             this.mapExits[y][x] = true;
+                            break;
                         }
-                        break;
-                    case -1: break;
-                    default:
-                        console.error(`invalid tile ID ${tileId} in objects layer`);
-
+                        default:
+                            console.error(`invalid tile type ${tileDataById.get(tileId)?.type}`);
+                    }
                 }
             }
         }
 
         this.anims.create({
             key: 'walk',
-            frames: this.anims.generateFrameNumbers('tiles', { frames: [this.TILES_PLAYER_0, this.TILES_PLAYER_1] }),
+            frames: this.anims.generateFrameNumbers('tiles', { frames: playerFrames }),
             frameRate: 10,
             repeat: -1,
         });
         this.anims.create({
             key: 'idle',
-            frames: this.anims.generateFrameNumbers('tiles', { frames: [this.TILES_PLAYER_0] }),
+            frames: this.anims.generateFrameNumbers('tiles', { frames: [playerFrames[0]] }),
         });
         this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
         this.player.play('idle');
@@ -117,18 +116,6 @@ export class PlayScene extends Phaser.Scene {
         this.keyDown = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
         this.keyLeft = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         this.keyRight = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-
-        const text = this.add.bitmapText(20, 200, "arcade", "fullscreen", 8);
-        text.setInteractive();
-        text.on('pointerdown', () => {
-            if (this.scale.isFullscreen) {
-                console.warn('stop full');
-                this.scale.stopFullscreen();
-            } else {
-                console.warn('start full');
-                this.scale.startFullscreen();
-            }
-        });
     }
 
     move(diffX: number, diffY: number) {
@@ -233,16 +220,8 @@ export class PlayScene extends Phaser.Scene {
             let boxTargetY = targetY + diffY;
             if (boxTargetX < 0 || boxTargetX >= this.mapWidth || boxTargetY < 0 || boxTargetY > this.mapHeight)
                 return false;
-            return this.mapBoxes[boxTargetY][boxTargetX] == undefined && this.isGroundTile(this.staticMap[boxTargetY][boxTargetX]);
+            return this.mapBoxes[boxTargetY][boxTargetX] == undefined && !this.walls[boxTargetY][boxTargetX];
         } else
-            return this.isGroundTile(this.staticMap[targetY][targetX]) || this.staticMap[targetY][targetX] == this.TILES_EXIT;
-    }
-
-    isGroundTile(tileId: number) {
-        return tileId == this.TILES_FLOOR_SAND || tileId == this.TILES_FLOOR_DIRT;
-    }
-
-    isBoxTile(tileId: number) {
-        return tileId == this.TILES_BOX1 || tileId == this.TILES_BOX2;
+            return !this.walls[targetY][targetX];
     }
 }
