@@ -31,7 +31,6 @@ export class PlayScene extends Phaser.Scene {
 
     init(data: any) {
         this.level = data.level ?? 1;
-        console.warn("init");
         this.mapBoxes = [];
         this.mapExits = [];
         this.walls = [];

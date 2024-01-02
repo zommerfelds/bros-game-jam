@@ -17,7 +17,7 @@ const config = {
     antialias: false,
     autoRound: true,
     roundPixels: true,
-    scene: [MenuScene, PlayScene],
+    scene: [MenuScene, PlayScene, GameEndScene],
 };
 
 const game = new Phaser.Game(config);
