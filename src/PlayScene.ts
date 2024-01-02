@@ -19,8 +19,8 @@ export class PlayScene extends Phaser.Scene {
     walls: Array<Array<boolean>>;
     mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
     mapExits: Array<Array<any>>;
-    mapWidth = 7; // TODO: make dynamic?
-    mapHeight = 13;
+    mapWidth: number;
+    mapHeight: number;
     allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
     level: number;
     levelJsonKey: string;
@@ -30,11 +30,6 @@ export class PlayScene extends Phaser.Scene {
         this.mapBoxes = [];
         this.mapExits = [];
         this.walls = [];
-        for (let y = 0; y < this.mapHeight; y++) {
-            this.mapBoxes[y] = [];
-            this.mapExits[y] = [];
-            this.walls[y] = [];
-        }
     }
 
     preload() {
@@ -46,13 +41,21 @@ export class PlayScene extends Phaser.Scene {
     }
 
     create() {
-        if (this.cache.json.get(this.levelJsonKey) === undefined) {
+        const mapData = this.cache.json.get(this.levelJsonKey);
+        if (mapData === undefined) {
             this.scene.start("GameEndScene");
             return;
         }
-        const layer0 = this.cache.json.get(this.levelJsonKey)['layers'][0];
-        const layer1 = this.cache.json.get(this.levelJsonKey)['layers'][1];
-        const w = layer0['width'];
+        const layer0 = mapData['layers'][0];
+        const layer1 = mapData['layers'][1];
+        this.mapWidth = mapData['width'];
+        this.mapHeight = mapData['height'];
+
+        for (let y = 0; y < this.mapHeight; y++) {
+            this.mapBoxes[y] = [];
+            this.mapExits[y] = [];
+            this.walls[y] = [];
+        }
 
         const tileDataById: Map<number, { type: string }> = new Map();
         const playerFrames = [];
@@ -68,12 +71,12 @@ export class PlayScene extends Phaser.Scene {
 
         for (let y = 0; y < this.mapHeight; y++) {
             for (let x = 0; x < this.mapWidth; x++) {
-                let tileId = layer0['data'][y * w + x] - 1;
+                let tileId = layer0['data'][y * this.mapWidth + x] - 1;
                 if (tileId != -1) {
                     const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                     tile.depth = tile.y - 1000;
                 }
-                tileId = layer1['data'][y * w + x] - 1;
+                tileId = layer1['data'][y * this.mapWidth + x] - 1;
                 if (tileId != -1) {
                     switch (tileDataById.get(tileId)?.type) {
                         case undefined: {
@@ -121,6 +124,8 @@ export class PlayScene extends Phaser.Scene {
         this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
         this.player.play('idle');
         this.allMovableObjects.push(this.player);
+
+        this.cameras.main.startFollow(this.player);
 
         this.keyUp = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
         this.keyDown = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);

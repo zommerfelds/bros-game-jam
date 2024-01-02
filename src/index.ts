@@ -20,7 +20,7 @@ const config = {
 };
 
 const params = new URLSearchParams(window.location.search);
-const startScene = params.get('scene') ?? 'MenuScene';
+const startScene = params.get('scene') ?? MenuScene.name;
 
 const game = new Phaser.Game(config);
 
