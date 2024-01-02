@@ -17,7 +17,15 @@ const config = {
     antialias: false,
     autoRound: true,
     roundPixels: true,
-    scene: [MenuScene, PlayScene, GameEndScene],
 };
 
+const params = new URLSearchParams(window.location.search);
+const startScene = params.get('scene') ?? 'MenuScene';
+
 const game = new Phaser.Game(config);
+
+const allScenes = [MenuScene, PlayScene, GameEndScene];
+
+for (let sceneClass of allScenes) {
+    game.scene.add(sceneClass.name, sceneClass, sceneClass.name == startScene);
+}

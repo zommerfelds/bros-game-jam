@@ -3,10 +3,6 @@ import fontXml from '../public/assets/arcade.xml';
 
 export class GameEndScene extends Phaser.Scene {
 
-    constructor() {
-        super({ key: "GameEndScene" });
-    }
-
     preload() {
         this.load.path = 'assets/';
         this.load.bitmapFont('arcade', fontPng, fontXml);

@@ -25,10 +25,6 @@ export class PlayScene extends Phaser.Scene {
     level: number;
     levelJsonKey: string;
 
-    constructor() {
-        super({ key: "PlayScene" });
-    }
-
     init(data: any) {
         this.level = data.level ?? 1;
         this.mapBoxes = [];
