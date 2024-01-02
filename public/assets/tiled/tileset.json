@@ -26,6 +26,14 @@
          "type":"player"
         }, 
         {
+         "id":98,
+         "type":"player-idle"
+        }, 
+        {
+         "id":99,
+         "type":"player-idle"
+        }, 
+        {
          "id":128,
          "type":"flag"
         }, 

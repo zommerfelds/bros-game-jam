@@ -62,6 +62,7 @@ export class PlayScene extends MyScene {
 
         const tileDataById: Map<number, { type: string }> = new Map();
         const playerFrames = [];
+        const playerFramesIdle = [];
         for (let t of tileData['tiles']) {
             tileDataById.set(
                 t['id'],
@@ -69,6 +70,9 @@ export class PlayScene extends MyScene {
             );
             if (t['type'] == 'player') {
                 playerFrames.push(t['id']);
+            }
+            if (t['type'] == 'player-idle') {
+                playerFramesIdle.push(t['id']);
             }
         }
 
@@ -121,7 +125,9 @@ export class PlayScene extends MyScene {
             });
             this.anims.create({
                 key: 'idle',
-                frames: this.anims.generateFrameNumbers('tiles', { frames: [playerFrames[0]] }),
+                frames: this.anims.generateFrameNumbers('tiles', { frames: playerFramesIdle }),
+                frameRate: 2,
+                repeat: -1,
             });
         }
         this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
