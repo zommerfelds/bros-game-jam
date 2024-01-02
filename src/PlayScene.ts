@@ -109,16 +109,19 @@ export class PlayScene extends Phaser.Scene {
             }
         }
 
-        this.anims.create({
-            key: 'walk',
-            frames: this.anims.generateFrameNumbers('tiles', { frames: playerFrames }),
-            frameRate: 10,
-            repeat: -1,
-        });
-        this.anims.create({
-            key: 'idle',
-            frames: this.anims.generateFrameNumbers('tiles', { frames: [playerFrames[0]] }),
-        });
+        if (this.anims.get('walk') == undefined) {
+            // Can replace this by loading anim from JSON.
+            this.anims.create({
+                key: 'walk',
+                frames: this.anims.generateFrameNumbers('tiles', { frames: playerFrames }),
+                frameRate: 10,
+                repeat: -1,
+            });
+            this.anims.create({
+                key: 'idle',
+                frames: this.anims.generateFrameNumbers('tiles', { frames: [playerFrames[0]] }),
+            });
+        }
         this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
         this.player.play('idle');
         this.allMovableObjects.push(this.player);
