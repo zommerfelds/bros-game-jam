@@ -3,7 +3,10 @@ import fontPng from '../public/assets/arcade.png';
 import fontXml from '../public/assets/arcade.xml';
 import tileData from '../public/assets/tiled/tileset.json';
 
-export class PlayScene extends Phaser.Scene {
+import { MyScene } from './MyScene';
+
+export class PlayScene extends MyScene {
+    constructor() { super('PlayScene'); }
 
     keyUp: Phaser.Input.Keyboard.Key;
     keyDown: Phaser.Input.Keyboard.Key;

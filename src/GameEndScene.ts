@@ -1,7 +1,9 @@
 import fontPng from '../public/assets/arcade.png';
 import fontXml from '../public/assets/arcade.xml';
+import { MyScene } from './MyScene';
 
-export class GameEndScene extends Phaser.Scene {
+export class GameEndScene extends MyScene {
+    constructor() { super('GameEndScene'); }
 
     preload() {
         this.load.path = 'assets/';
