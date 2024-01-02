@@ -50,6 +50,10 @@
          "type":"wall"
         }, 
         {
+         "id":64,
+         "type":"monster1"
+        }, 
+        {
          "id":70,
          "type":"wall"
         }, 

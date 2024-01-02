@@ -2,6 +2,7 @@ import tileset from '../public/assets/tileset.png';
 import fontPng from '../public/assets/arcade.png';
 import fontXml from '../public/assets/arcade.xml';
 import tileData from '../public/assets/tiled/tileset.json';
+import asepriteTileInfo from '../public/assets/tileset.json';
 
 import { MyScene } from './MyScene';
 
@@ -18,10 +19,12 @@ export class PlayScene extends MyScene {
     playerY: number = 7;
     playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
+    sword: Phaser.GameObjects.Image;
 
     walls: Array<Array<boolean>>;
     mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
     mapExits: Array<Array<any>>;
+    monster1List: Array<Array<Phaser.GameObjects.Image>>;
     mapWidth: number;
     mapHeight: number;
     allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
@@ -32,6 +35,7 @@ export class PlayScene extends MyScene {
         this.level = data.level ?? 1;
         this.mapBoxes = [];
         this.mapExits = [];
+        this.monster1List = [];
         this.walls = [];
         this.player = undefined;
     }
@@ -56,6 +60,7 @@ export class PlayScene extends MyScene {
         for (let y = 0; y < this.mapHeight; y++) {
             this.mapBoxes[y] = [];
             this.mapExits[y] = [];
+            this.monster1List[y] = [];
             this.walls[y] = [];
         }
 
@@ -122,6 +127,13 @@ export class PlayScene extends MyScene {
                                 this.mapExits[y][x] = true;
                                 break;
                             }
+                            case 'monster1': {
+                                const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                                tile.depth = tile.y;
+                                renderLayer.add(tile);
+                                this.monster1List[y][x] = tile;
+                                break;
+                            }
                             default:
                                 throw `invalid tile type ${tileDataById.get(tileId)?.type}`;
                         }
@@ -147,6 +159,16 @@ export class PlayScene extends MyScene {
         }
         this.player.play('idle');
         this.allMovableObjects.push(this.player);
+
+        for (let slice of asepriteTileInfo.meta.slices) {
+            if (slice.name != "sword") continue;
+            const bounds = slice.keys[0].bounds;
+
+            console.warn(bounds, bounds.x / 16 + bounds.y / 16 * asepriteTileInfo.meta.size.w / 16);
+            this.sword = this.add.image(0, 0, 'tiles', bounds.x / 16 + bounds.y / 16 * asepriteTileInfo.meta.size.w / 16);
+            this.sword.visible = false;
+            break;
+        }
 
         this.cameras.main.startFollow(this.player);
 
@@ -197,8 +219,26 @@ export class PlayScene extends MyScene {
                     }
                 },
             });
+        } else if (this.canAttack(diffX, diffY)) {
+            const monster = this.monster1List[targetY][targetX];
+            this.sword.visible = true;
+            this.sword.x = this.player.x;
+            this.sword.y = this.player.y;
+            this.sword.angle = diffY * 90;
+            this.sword.flipX = diffX < 0.0;
+            this.playerMoveTween = this.tweens.add({
+                targets: this.sword,
+                x: this.sword.x + 16 * diffX,
+                y: this.sword.y + 11 * diffY,
+                duration: 200,
+                ease: Phaser.Math.Easing.Circular.In,
+                onComplete: () => {
+                    this.sword.visible = false;
+                    monster.destroy();
+                },
+            })
+            this.monster1List[targetY][targetX] = undefined;
         }
-
     }
 
     // Hack to prevent crashing until this issue is fixed:
@@ -257,7 +297,7 @@ export class PlayScene extends MyScene {
         }
     }
 
-    canMove(diffX: number, diffY: number) {
+    canMove(diffX: number, diffY: number): boolean {
         let targetX = this.playerX + diffX;
         let targetY = this.playerY + diffY;
         if (targetX < 0 || targetX >= this.mapWidth || targetY < 0 || targetY > this.mapHeight)
@@ -271,6 +311,14 @@ export class PlayScene extends MyScene {
                 return false;
             return this.mapBoxes[boxTargetY][boxTargetX] == undefined && !this.walls[boxTargetY][boxTargetX];
         } else
-            return !this.walls[targetY][targetX];
+            return !this.walls[targetY][targetX] && !this.monster1List[targetY][targetX];
+    }
+
+    canAttack(diffX: number, diffY: number): boolean {
+        let targetX = this.playerX + diffX;
+        let targetY = this.playerY + diffY;
+        if (targetX < 0 || targetX >= this.mapWidth || targetY < 0 || targetY > this.mapHeight)
+            return false;
+        return this.monster1List[targetY][targetX] !== undefined;
     }
 }
