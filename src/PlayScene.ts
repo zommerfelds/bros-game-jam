@@ -33,6 +33,7 @@ export class PlayScene extends MyScene {
         this.mapBoxes = [];
         this.mapExits = [];
         this.walls = [];
+        this.player = undefined;
     }
 
     preload() {
@@ -49,8 +50,6 @@ export class PlayScene extends MyScene {
             this.scene.start("GameEndScene");
             return;
         }
-        const layer0 = mapData['layers'][0];
-        const layer1 = mapData['layers'][1];
         this.mapWidth = mapData['width'];
         this.mapHeight = mapData['height'];
 
@@ -76,43 +75,55 @@ export class PlayScene extends MyScene {
             }
         }
 
-        for (let y = 0; y < this.mapHeight; y++) {
-            for (let x = 0; x < this.mapWidth; x++) {
-                let tileId = layer0['data'][y * this.mapWidth + x] - 1;
-                if (tileId != -1) {
-                    const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                    tile.depth = tile.y - 1000;
-                }
-                tileId = layer1['data'][y * this.mapWidth + x] - 1;
-                if (tileId != -1) {
-                    switch (tileDataById.get(tileId)?.type) {
-                        case undefined: {
-                            // No type (class) means that it's a static wall.
-                            this.walls[y][x] = true;
-                            const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                            tile.depth = tile.y;
-                            break;
+        for (let layer of mapData['layers']) {
+            const renderLayer = this.add.layer();
+            for (let y = 0; y < this.mapHeight; y++) {
+                for (let x = 0; x < this.mapWidth; x++) {
+                    const tileId = layer['data'][y * this.mapWidth + x] - 1;
+                    if (tileId != -1) {
+                        switch (tileDataById.get(tileId)?.type) {
+                            case undefined: {
+                                // No class means it's a ground tile.
+                                const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                                tile.depth = tile.y;
+                                renderLayer.add(tile);
+                                break;
+                            }
+                            case 'wall': {
+                                this.walls[y][x] = true;
+                                const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                                tile.depth = tile.y;
+                                renderLayer.add(tile);
+                                break;
+                            }
+                            case 'box': {
+                                const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                                tile.depth = tile.y;
+                                renderLayer.add(tile);
+                                this.mapBoxes[y][x] = { obj: tile };
+                                this.allMovableObjects.push(tile);
+                                break;
+                            }
+                            case 'player':
+                            case 'player-idle': {
+                                this.playerX = x;
+                                this.playerY = y;
+                                if (this.player == undefined) {
+                                    this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
+                                    renderLayer.add(this.player);
+                                }
+                                break;
+                            }
+                            case 'flag': {
+                                const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                                tile.depth = tile.y;
+                                renderLayer.add(tile);
+                                this.mapExits[y][x] = true;
+                                break;
+                            }
+                            default:
+                                console.error(`invalid tile type ${tileDataById.get(tileId)?.type}`);
                         }
-                        case 'box': {
-                            const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                            tile.depth = tile.y;
-                            this.mapBoxes[y][x] = { obj: tile };
-                            this.allMovableObjects.push(tile);
-                            break;
-                        }
-                        case 'player': {
-                            this.playerX = x;
-                            this.playerY = y;
-                            break;
-                        }
-                        case 'flag': {
-                            const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                            tile.depth = tile.y;
-                            this.mapExits[y][x] = true;
-                            break;
-                        }
-                        default:
-                            console.error(`invalid tile type ${tileDataById.get(tileId)?.type}`);
                     }
                 }
             }
@@ -133,7 +144,6 @@ export class PlayScene extends MyScene {
                 repeat: -1,
             });
         }
-        this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
         this.player.play('idle');
         this.allMovableObjects.push(this.player);
 
