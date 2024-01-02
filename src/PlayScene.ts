@@ -83,23 +83,23 @@ export class PlayScene extends MyScene {
                     if (tileId != -1) {
                         switch (tileDataById.get(tileId)?.type) {
                             case undefined: {
-                                // No class means it's a ground tile.
+                                // No class/type means it's a ground tile.
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                                tile.depth = tile.y;
-                                renderLayer.add(tile);
+                                tile.depth = tile.y - 1000; // TODO: temp hack until layer issue is fixed.
+                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
                                 break;
                             }
                             case 'wall': {
                                 this.walls[y][x] = true;
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y;
-                                renderLayer.add(tile);
+                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
                                 break;
                             }
                             case 'box': {
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y;
-                                renderLayer.add(tile);
+                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
                                 this.mapBoxes[y][x] = { obj: tile };
                                 this.allMovableObjects.push(tile);
                                 break;
@@ -108,21 +108,23 @@ export class PlayScene extends MyScene {
                             case 'player-idle': {
                                 this.playerX = x;
                                 this.playerY = y;
-                                if (this.player == undefined) {
+                                if (this.player === undefined) {
                                     this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
-                                    renderLayer.add(this.player);
+                                    // renderLayer.add(this.player); // TODO: this cases Phaser to crash when the scene is removed.
+                                } else {
+                                    console.warn('already defined');
                                 }
                                 break;
                             }
                             case 'flag': {
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y;
-                                renderLayer.add(tile);
+                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
                                 this.mapExits[y][x] = true;
                                 break;
                             }
                             default:
-                                console.error(`invalid tile type ${tileDataById.get(tileId)?.type}`);
+                                throw `invalid tile type ${tileDataById.get(tileId)?.type}`;
                         }
                     }
                 }
@@ -171,7 +173,7 @@ export class PlayScene extends MyScene {
                     x: 10 + 8 + 16 * (targetX + diffX),
                     y: 10 + 8 + 11 * (targetY + diffY),
                     duration: 250,
-                    ease: Phaser.Math.Easing.Quadratic.InOut,
+                    ease: Phaser.Math.Easing.Quadratic.InOut, // TODO: IMPROVE
                     delay: 30,
                 });
                 this.mapBoxes[targetY][targetX] = undefined;
