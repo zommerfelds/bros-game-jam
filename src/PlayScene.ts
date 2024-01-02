@@ -172,8 +172,8 @@ export class PlayScene extends MyScene {
                     x: 10 + 8 + 16 * (targetX + diffX),
                     y: 10 + 8 + 11 * (targetY + diffY),
                     duration: 250,
-                    ease: Phaser.Math.Easing.Quadratic.InOut, // TODO: IMPROVE
-                    delay: 30,
+                    ease: Phaser.Math.Easing.Quadratic.InOut,
+                    delay: 10,
                 });
                 this.mapBoxes[targetY][targetX] = undefined;
                 this.mapBoxes[targetY + diffY][targetX + diffX] = box;
