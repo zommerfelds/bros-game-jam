@@ -86,40 +86,39 @@ export class PlayScene extends MyScene {
                                 // No class/type means it's a ground tile.
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y - 1000; // TODO: temp hack until layer issue is fixed.
-                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
+                                renderLayer.add(tile);
                                 break;
                             }
                             case 'wall': {
                                 this.walls[y][x] = true;
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y;
-                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
+                                renderLayer.add(tile);
                                 break;
                             }
                             case 'box': {
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y;
-                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
+                                renderLayer.add(tile);
                                 this.mapBoxes[y][x] = { obj: tile };
                                 this.allMovableObjects.push(tile);
                                 break;
                             }
                             case 'player':
                             case 'player-idle': {
+                                if (this.player !== undefined) {
+                                    throw `multiple player tiles found`;
+                                }
                                 this.playerX = x;
                                 this.playerY = y;
-                                if (this.player === undefined) {
-                                    this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
-                                    // renderLayer.add(this.player); // TODO: this cases Phaser to crash when the scene is removed.
-                                } else {
-                                    console.warn('already defined');
-                                }
+                                this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
+                                renderLayer.add(this.player);
                                 break;
                             }
                             case 'flag': {
                                 const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                                 tile.depth = tile.y;
-                                // renderLayer.add(tile); // TODO: this cases Phaser to crash when the scene is removed.
+                                renderLayer.add(tile);
                                 this.mapExits[y][x] = true;
                                 break;
                             }
@@ -193,12 +192,23 @@ export class PlayScene extends MyScene {
                 onComplete: () => {
                     this.player.play('idle');
                     if (this.mapExits[targetY][targetX] != undefined) {
+                        this.destroyCrashFix();
                         this.scene.restart({ level: this.level + 1 });
                     }
                 },
             });
         }
 
+    }
+
+    // Hack to prevent crashing until this issue is fixed:
+    // https://github.com/photonstorm/phaser/issues/6675
+    destroyCrashFix() {
+        for (let child of this.children.getAll()) {
+            if (child instanceof Phaser.GameObjects.Layer) {
+                child.destroy();
+            }
+        }
     }
 
     update() {

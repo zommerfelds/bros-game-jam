@@ -22,7 +22,7 @@ const config = {
 const params = new URLSearchParams(window.location.search);
 // For local dev: http://localhost:8080/?scene=PlayScene&level=3
 const startScene = params.get('scene') ?? 'MenuScene';
-const startLevel = params.get('level') ?? 1;
+const startLevel = parseInt(params.get('level') ?? '1');
 const game = new Phaser.Game(config);
 
 const allScenes = [MenuScene, PlayScene, GameEndScene];
