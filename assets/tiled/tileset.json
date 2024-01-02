@@ -18,6 +18,54 @@
          "type":"box"
         }, 
         {
+         "id":6,
+         "type":"wall"
+        }, 
+        {
+         "id":7,
+         "type":"wall"
+        }, 
+        {
+         "id":8,
+         "type":"wall"
+        }, 
+        {
+         "id":9,
+         "type":"wall"
+        }, 
+        {
+         "id":38,
+         "type":"wall"
+        }, 
+        {
+         "id":39,
+         "type":"wall"
+        }, 
+        {
+         "id":40,
+         "type":"wall"
+        }, 
+        {
+         "id":41,
+         "type":"wall"
+        }, 
+        {
+         "id":70,
+         "type":"wall"
+        }, 
+        {
+         "id":71,
+         "type":"wall"
+        }, 
+        {
+         "id":72,
+         "type":"wall"
+        }, 
+        {
+         "id":73,
+         "type":"wall"
+        }, 
+        {
          "id":96,
          "type":"player"
         }, 
@@ -32,6 +80,22 @@
         {
          "id":99,
          "type":"player-idle"
+        }, 
+        {
+         "id":102,
+         "type":"wall"
+        }, 
+        {
+         "id":103,
+         "type":"wall"
+        }, 
+        {
+         "id":104,
+         "type":"wall"
+        }, 
+        {
+         "id":105,
+         "type":"wall"
         }, 
         {
          "id":128,
