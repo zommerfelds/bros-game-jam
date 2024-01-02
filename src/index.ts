@@ -2,6 +2,7 @@ import 'phaser';
 
 import { MenuScene } from './MenuScene';
 import { PlayScene } from './PlayScene';
+import { GameEndScene } from './GameEndScene';
 
 const config = {
     type: Phaser.AUTO,

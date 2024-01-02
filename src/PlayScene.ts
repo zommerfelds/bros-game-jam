@@ -1,7 +1,6 @@
 import tileset from '../public/assets/tileset.png';
 import fontPng from '../public/assets/arcade.png';
 import fontXml from '../public/assets/arcade.xml';
-import level1Json from '../public/assets/tiled/level1.json';
 import tileData from '../public/assets/tiled/tileset.json';
 
 export class PlayScene extends Phaser.Scene {
@@ -23,9 +22,16 @@ export class PlayScene extends Phaser.Scene {
     mapWidth = 7; // TODO: make dynamic?
     mapHeight = 13;
     allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
+    level: number;
+    levelJsonKey: string;
 
     constructor() {
         super({ key: "PlayScene" });
+    }
+
+    init(data: any) {
+        this.level = data.level ?? 1;
+        console.warn("init");
         this.mapBoxes = [];
         this.mapExits = [];
         this.walls = [];
@@ -40,11 +46,17 @@ export class PlayScene extends Phaser.Scene {
         this.load.path = 'assets/';
         this.load.spritesheet('tiles', tileset, { frameWidth: 16, frameHeight: 16 });
         this.load.bitmapFont('arcade', fontPng, fontXml);
+        this.levelJsonKey = 'level' + this.level;
+        this.load.json(this.levelJsonKey, `tiled/level${this.level}.json`);
     }
 
     create() {
-        const layer0 = level1Json['layers'][0];
-        const layer1 = level1Json['layers'][1];
+        if (this.cache.json.get(this.levelJsonKey) === undefined) {
+            this.scene.start("GameEndScene");
+            return;
+        }
+        const layer0 = this.cache.json.get(this.levelJsonKey)['layers'][0];
+        const layer1 = this.cache.json.get(this.levelJsonKey)['layers'][1];
         const w = layer0['width'];
 
         const tileDataById: Map<number, { type: string }> = new Map();
@@ -154,7 +166,7 @@ export class PlayScene extends Phaser.Scene {
                 onComplete: () => {
                     this.player.play('idle');
                     if (this.mapExits[targetY][targetX] != undefined) {
-                        console.warn('exit!');
+                        this.scene.restart({ level: this.level + 1 });
                     }
                 },
             });
