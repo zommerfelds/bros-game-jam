@@ -87,6 +87,7 @@ export class PlayScene extends MyScene {
                 if (tileId != -1) {
                     switch (tileDataById.get(tileId)?.type) {
                         case undefined: {
+                            // No type (class) means that it's a static wall.
                             this.walls[y][x] = true;
                             const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
                             tile.depth = tile.y;
@@ -94,6 +95,7 @@ export class PlayScene extends MyScene {
                         }
                         case 'box': {
                             const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                            tile.depth = tile.y;
                             this.mapBoxes[y][x] = { obj: tile };
                             this.allMovableObjects.push(tile);
                             break;
@@ -105,6 +107,7 @@ export class PlayScene extends MyScene {
                         }
                         case 'flag': {
                             const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
+                            tile.depth = tile.y;
                             this.mapExits[y][x] = true;
                             break;
                         }
@@ -174,7 +177,7 @@ export class PlayScene extends MyScene {
                 x: 10 + 8 + 16 * targetX,
                 y: 10 + 8 + 11 * targetY,
                 duration: 250,
-                ease: Phaser.Math.Easing.Quadratic.InOut,
+                // ease: Phaser.Math.Easing.Quadratic.InOut,
                 onComplete: () => {
                     this.player.play('idle');
                     if (this.mapExits[targetY][targetX] != undefined) {
