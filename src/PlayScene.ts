@@ -9,22 +9,29 @@ import { MyScene } from './MyScene';
 export class PlayScene extends MyScene {
     constructor() { super('PlayScene'); }
 
+    // TODO: create separate scene with UI and launch it with this.scenes.launch()
+
+    readonly dirs = [
+        new Phaser.Math.Vector2(1, 0), new Phaser.Math.Vector2(-1, 0),
+        new Phaser.Math.Vector2(0, -1), new Phaser.Math.Vector2(0, 1)];
+
     keyUp: Phaser.Input.Keyboard.Key;
     keyDown: Phaser.Input.Keyboard.Key;
     keyLeft: Phaser.Input.Keyboard.Key;
     keyRight: Phaser.Input.Keyboard.Key;
 
     player: Phaser.GameObjects.Sprite;
-    playerX: number = 4;
-    playerY: number = 7;
+    playerX: number;
+    playerY: number;
     playerMoveTween?: Phaser.Tweens.Tween;
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
     sword: Phaser.GameObjects.Image;
+    playerHealth: number;
 
     walls: Array<Array<boolean>>;
     mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
     mapExits: Array<Array<any>>;
-    monster1List: Array<Array<Phaser.GameObjects.Image>>;
+    mapMonsters: Array<Array<{ obj: Phaser.GameObjects.Sprite, lastMoveTime: number } | undefined>>;
     mapWidth: number;
     mapHeight: number;
     allMovableObjects: Array<Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth> = [];
@@ -35,9 +42,10 @@ export class PlayScene extends MyScene {
         this.level = data.level ?? 1;
         this.mapBoxes = [];
         this.mapExits = [];
-        this.monster1List = [];
+        this.mapMonsters = [];
         this.walls = [];
         this.player = undefined;
+        this.playerHealth = 3;
     }
 
     preload() {
@@ -60,7 +68,7 @@ export class PlayScene extends MyScene {
         for (let y = 0; y < this.mapHeight; y++) {
             this.mapBoxes[y] = [];
             this.mapExits[y] = [];
-            this.monster1List[y] = [];
+            this.mapMonsters[y] = [];
             this.walls[y] = [];
         }
 
@@ -78,6 +86,31 @@ export class PlayScene extends MyScene {
             if (t['type'] == 'player-idle') {
                 playerFramesIdle.push(t['id']);
             }
+        }
+
+        if (this.anims.get('walk') == undefined) {
+            // Can replace this by loading anim from JSON.
+            this.anims.create({
+                key: 'walk',
+                frames: this.anims.generateFrameNumbers('tiles', { frames: playerFrames }),
+                frameRate: 10,
+                repeat: -1,
+            });
+            this.anims.create({
+                key: 'idle',
+                frames: this.anims.generateFrameNumbers('tiles', { frames: playerFramesIdle }),
+                frameRate: 2,
+                repeat: -1,
+            });
+            this.anims.create({
+                key: 'monster1-spike',
+                frames: this.anims.generateFrameNumbers('tiles', { frames: [65, 64] }),
+                frameRate: 5,
+            });
+            this.anims.create({
+                key: 'monster1-idle',
+                frames: this.anims.generateFrameNumbers('tiles', { frames: [64] }),
+            });
         }
 
         for (let layer of mapData['layers']) {
@@ -116,7 +149,7 @@ export class PlayScene extends MyScene {
                                 }
                                 this.playerX = x;
                                 this.playerY = y;
-                                this.player = this.add.sprite(10 + 8 + 16 * this.playerX, 10 + 8 + 11 * this.playerY, 'unused');
+                                this.player = this.add.sprite(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'unused');
                                 renderLayer.add(this.player);
                                 break;
                             }
@@ -128,10 +161,12 @@ export class PlayScene extends MyScene {
                                 break;
                             }
                             case 'monster1': {
-                                const tile = this.add.image(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'tiles', tileId);
-                                tile.depth = tile.y;
-                                renderLayer.add(tile);
-                                this.monster1List[y][x] = tile;
+                                const sprite = this.add.sprite(10 + 8 + 16 * x, 10 + 8 + 11 * y, 'unused');
+                                sprite.depth = sprite.y;
+                                renderLayer.add(sprite);
+                                this.mapMonsters[y][x] = { obj: sprite, lastMoveTime: 0 };
+                                sprite.play('monster1-idle');
+                                this.allMovableObjects.push(sprite);
                                 break;
                             }
                             default:
@@ -141,22 +176,6 @@ export class PlayScene extends MyScene {
                 }
             }
         }
-
-        if (this.anims.get('walk') == undefined) {
-            // Can replace this by loading anim from JSON.
-            this.anims.create({
-                key: 'walk',
-                frames: this.anims.generateFrameNumbers('tiles', { frames: playerFrames }),
-                frameRate: 10,
-                repeat: -1,
-            });
-            this.anims.create({
-                key: 'idle',
-                frames: this.anims.generateFrameNumbers('tiles', { frames: playerFramesIdle }),
-                frameRate: 2,
-                repeat: -1,
-            });
-        }
         this.player.play('idle');
         this.allMovableObjects.push(this.player);
 
@@ -164,7 +183,6 @@ export class PlayScene extends MyScene {
             if (slice.name != "sword") continue;
             const bounds = slice.keys[0].bounds;
 
-            console.warn(bounds, bounds.x / 16 + bounds.y / 16 * asepriteTileInfo.meta.size.w / 16);
             this.sword = this.add.image(0, 0, 'tiles', bounds.x / 16 + bounds.y / 16 * asepriteTileInfo.meta.size.w / 16);
             this.sword.visible = false;
             break;
@@ -220,7 +238,7 @@ export class PlayScene extends MyScene {
                 },
             });
         } else if (this.canAttack(diffX, diffY)) {
-            const monster = this.monster1List[targetY][targetX];
+            const monster = this.mapMonsters[targetY][targetX];
             this.sword.visible = true;
             this.sword.x = this.player.x;
             this.sword.y = this.player.y;
@@ -234,10 +252,10 @@ export class PlayScene extends MyScene {
                 ease: Phaser.Math.Easing.Circular.In,
                 onComplete: () => {
                     this.sword.visible = false;
-                    monster.destroy();
+                    monster.obj.destroy();
                 },
             })
-            this.monster1List[targetY][targetX] = undefined;
+            this.mapMonsters[targetY][targetX] = undefined;
         }
     }
 
@@ -255,6 +273,56 @@ export class PlayScene extends MyScene {
         this.readInput();
         for (let obj of this.allMovableObjects) {
             obj.depth = obj.y;
+        }
+
+        // TODO: Refactor mapMonsters to use a better datastructure. Possibliy some entity system.
+        for (let x = 0; x < this.mapWidth; x++) {
+            for (let y = 0; y < this.mapHeight; y++) {
+                const monster = this.mapMonsters[y][x];
+                if (monster === undefined) continue;
+
+                if (monster.lastMoveTime + 800 < this.game.getTime()) {
+                    monster.lastMoveTime = this.game.getTime();
+
+                    if (Math.abs(x - this.playerX) + Math.abs(y - this.playerY) < 5) {
+                        const diff = new Phaser.Math.Vector2(x - this.playerX, y - this.playerY);
+                        const positiveDirs = [];
+                        for (let dir of this.dirs) {
+                            const dot = diff.dot(dir);
+                            if (dot < 0.0) {
+                                positiveDirs.push(dir);
+                            }
+                        }
+                        for (let dir of positiveDirs) {
+                            if (x + dir.x == this.playerX && y + dir.y == this.playerY) {
+                                monster.obj.play("monster1-spike");
+                                this.cameras.main.shake(300, 0.01);
+                                this.playerHealth--;
+                                break;
+                            }
+                            if (!this.isEmpty(x + dir.x, y + dir.y)) continue;
+                            this.tweens.add({
+                                targets: monster.obj,
+                                x: 10 + 8 + 16 * (x + dir.x),
+                                y: 10 + 8 + 11 * (y + dir.y),
+                                duration: 250,
+                                ease: Phaser.Math.Easing.Quadratic.InOut,
+                                delay: 10,
+                            });
+                            // TODO: Refactor mapMonsters to use a better datastructure. Possibliy some entity system.
+                            this.mapMonsters[y][x] = undefined;
+                            this.mapMonsters[y + dir.y][x + dir.x] = monster;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (this.playerHealth <= 0.0) {
+            this.destroyCrashFix();
+            this.scene.start("GameEndScene");
+            return;
         }
     }
 
@@ -280,12 +348,9 @@ export class PlayScene extends MyScene {
                 // Keep going in the same direction until the player releases.
                 this.move(this.playerInputMoveDir.x, this.playerInputMoveDir.y);
             } else {
-                const dirs = [
-                    new Phaser.Math.Vector2(1, 0), new Phaser.Math.Vector2(-1, 0),
-                    new Phaser.Math.Vector2(0, -1), new Phaser.Math.Vector2(0, 1)];
                 let maxDot = 0.0;
                 let maxDir = new Phaser.Math.Vector2(0, 0);
-                for (let dir of dirs) {
+                for (let dir of this.dirs) {
                     const dot = diff.dot(dir);
                     if (dot > maxDot) {
                         maxDot = dot;
@@ -311,7 +376,13 @@ export class PlayScene extends MyScene {
                 return false;
             return this.mapBoxes[boxTargetY][boxTargetX] == undefined && !this.walls[boxTargetY][boxTargetX];
         } else
-            return !this.walls[targetY][targetX] && !this.monster1List[targetY][targetX];
+            return !this.walls[targetY][targetX] && !this.mapMonsters[targetY][targetX];
+    }
+
+    isEmpty(x: number, y: number): boolean {
+        if (x < 0 || x >= this.mapWidth || y < 0 || y > this.mapHeight)
+            return false;
+        return !this.mapBoxes[y][x] && !this.walls[y][x] && !this.mapMonsters[y][x] && !(x == this.playerX && y == this.playerY);
     }
 
     canAttack(diffX: number, diffY: number): boolean {
@@ -319,6 +390,6 @@ export class PlayScene extends MyScene {
         let targetY = this.playerY + diffY;
         if (targetX < 0 || targetX >= this.mapWidth || targetY < 0 || targetY > this.mapHeight)
             return false;
-        return this.monster1List[targetY][targetX] !== undefined;
+        return this.mapMonsters[targetY][targetX] !== undefined;
     }
 }

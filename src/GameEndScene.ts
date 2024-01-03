@@ -14,8 +14,18 @@ export class GameEndScene extends MyScene {
         const textStart = this.add.bitmapText(
             this.sys.game.canvas.width / 2,
             this.sys.game.canvas.height * 0.33,
-            "arcade", "the end", 8);
+            "arcade", "the end", 10);
         textStart.setOrigin(0.5, 0.5);
+
+        const textRestart = this.add.bitmapText(
+            this.sys.game.canvas.width / 2,
+            this.sys.game.canvas.height * 0.66,
+            "arcade", "restart", 7);
+        textRestart.setOrigin(0.5, 0.5);
+        textRestart.setInteractive();
+        textRestart.on('pointerdown', () => {
+            this.scene.start("PlayScene");
+        });
     }
 
     update() {
