@@ -27,6 +27,8 @@ export class PlayScene extends MyScene {
     playerInputMoveDir?: Phaser.Math.Vector2 = undefined;
     sword: Phaser.GameObjects.Image;
     playerHealth: number;
+    darknessOverlay: Phaser.GameObjects.Graphics;
+    lightMask: Phaser.GameObjects.Image;
 
     walls: Array<Array<boolean>>;
     mapBoxes: Array<Array<{ obj: Phaser.GameObjects.Image } | undefined>>;
@@ -180,13 +182,25 @@ export class PlayScene extends MyScene {
         this.allMovableObjects.push(this.player);
 
         for (let slice of asepriteTileInfo.meta.slices) {
-            if (slice.name != "sword") continue;
             const bounds = slice.keys[0].bounds;
-
-            this.sword = this.add.image(0, 0, 'tiles', bounds.x / 16 + bounds.y / 16 * asepriteTileInfo.meta.size.w / 16);
-            this.sword.visible = false;
-            break;
+            this.textures.get('tiles').add(slice.name, 0, bounds.x, bounds.y, bounds.w, bounds.h);
         }
+
+        this.sword = this.add.image(0, 0, 'tiles', 'sword');
+        this.sword.visible = false;
+
+        // TODO: remove this hardcoded torch
+        const lightMask2 = this.make.image({ x: 30, y: 30, key: 'tiles', frame: 'circle-mask', add: false });
+        this.add.image(30, 30, 'tiles', 'torch1');
+
+        this.lightMask = this.make.image({ key: 'tiles', frame: 'circle-mask', add: false });
+        this.darknessOverlay = this.add.graphics();
+        this.darknessOverlay.fillStyle(0x000000, 0.9).fillRect(-this.renderer.width / 2, -this.renderer.height / 2, this.renderer.width, this.renderer.height);
+        const lightContainer = this.make.container({ add: false });
+        lightContainer.add([this.lightMask, lightMask2]);
+        const mask = new Phaser.Display.Masks.BitmapMask(this, lightContainer);
+        mask.invertAlpha = true;
+        this.darknessOverlay.setMask(mask);
 
         this.cameras.main.startFollow(this.player);
 
@@ -270,6 +284,11 @@ export class PlayScene extends MyScene {
     }
 
     update() {
+        this.darknessOverlay.x = this.player.x;
+        this.darknessOverlay.y = this.player.y;
+        this.lightMask.x = this.player.x;
+        this.lightMask.y = this.player.y;
+
         this.readInput();
         for (let obj of this.allMovableObjects) {
             obj.depth = obj.y;
