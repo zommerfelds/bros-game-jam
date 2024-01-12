@@ -192,8 +192,25 @@ export class PlayScene extends MyScene {
         // TODO: remove this hardcoded torch
         const lightMask2 = this.make.image({ x: 30, y: 30, key: 'tiles', frame: 'circle-mask', add: false });
         this.add.image(30, 30, 'tiles', 'torch1');
+        this.tweens.add({
+            targets: lightMask2,
+            scale: 1.2,
+            duration: 2000,
+            ease: Phaser.Math.Easing.Sine.Out,
+            yoyo: true,
+            repeat: -1,
+            delay: 500,
+        });
 
         this.lightMask = this.make.image({ key: 'tiles', frame: 'circle-mask', add: false });
+        this.tweens.add({
+            targets: this.lightMask,
+            scale: 1.2,
+            duration: 2000,
+            ease: Phaser.Math.Easing.Sine.Out,
+            yoyo: true,
+            repeat: -1,
+        });
         this.darknessOverlay = this.add.graphics();
         this.darknessOverlay.fillStyle(0x000000, 0.9).fillRect(-this.renderer.width / 2, -this.renderer.height / 2, this.renderer.width, this.renderer.height);
         const lightContainer = this.make.container({ add: false });
