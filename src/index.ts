@@ -16,7 +16,7 @@ const config = {
     pixelArt: true,
     antialias: false,
     autoRound: true,
-    roundPixels: true,
+    roundPixels: false,
 };
 
 const params = new URLSearchParams(window.location.search);
